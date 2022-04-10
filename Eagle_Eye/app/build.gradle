@@ -6,13 +6,15 @@ repositories {
     mavenLocal()
 }
 android {
-    compileSdk 30
+    compileSdk 31
     buildToolsVersion '30.0.3'
+//    compileSdkPreview "Tiramisu"
 
     defaultConfig {
 //        applicationId "com.dji.eagleseye"
         minSdk 21
-        targetSdk 30
+        targetSdk 31
+//        targetSdkPreview "Tiramisu"
 //        versionCode 1
 //        versionName "1.0"
         multiDexEnabled true
@@ -84,13 +86,22 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    //for adding tensorflow to app
+    aaptOptions{
+        noCompress "tflite"
+        noCompress "lite"
+    }
+    buildFeatures{
+        mlModelBinding true
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.squareup:otto:1.3.8'
-    implementation('com.dji:dji-sdk:4.15.1', {
+    implementation('com.dji:dji-sdk:4.16.1', {
         /**
          * Uncomment the "library-anti-distortion" if your app does not need Anti Distortion for Mavic 2 Pro and Mavic 2 Zoom.
          * Uncomment the "fly-safe-database" if you need database for release, or we will download it when DJISDKManager.getInstance().registerApp
@@ -100,10 +111,10 @@ dependencies {
         exclude module: 'library-anti-distortion'
         //exclude module: 'fly-safe-database'
     })
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.test:monitor:1.4.0'
+    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'androidx.test:monitor:1.5.0'
     //DJI SDK
-    compileOnly 'com.dji:dji-sdk-provided:4.15.1'
+    compileOnly 'com.dji:dji-sdk-provided:4.16.1'
 
     //UX SDK
     implementation ('com.dji:dji-uxsdk:4.15')
@@ -111,6 +122,14 @@ dependencies {
     androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+
+    //tensorflow
+//    implementation "org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2"
+    implementation "org.tensorflow:tensorflow-lite-gpu:2.5.0"
+    implementation "org.tensorflow:tensorflow-lite-support:0.2.0"
+//    implementation "org.tensorflow:tensorflow-lite-task-vision:0.3.1"
+//    implementation "org.tensorflow:tensorflow-lite-task-text:0.1.0"
+
     testImplementation 'junit:junit:4.13.2'
 
 //    implementation 'androidx.appcompat:appcompat:1.4.0'
@@ -120,10 +139,10 @@ dependencies {
 //    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
 //    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.core:core:1.3.2'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.core:core:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.annotation:annotation:1.2.0'
+    implementation 'androidx.annotation:annotation:1.3.0'
 }

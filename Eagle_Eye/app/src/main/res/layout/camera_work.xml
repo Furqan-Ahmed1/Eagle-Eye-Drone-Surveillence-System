@@ -12,6 +12,24 @@
         android:layout_gravity="center"
         android:layout_marginBottom="0dp" />
 
+    <TextView
+        android:id="@+id/detection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Non-voilent"
+        android:textColor="@color/green"
+        android:textSize="20dp" />
+
+    <TextView
+        android:id="@+id/score"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/detection"
+        android:layout_marginBottom="-27dp"
+        android:text="score"
+        android:textColor="@color/green"
+        android:textSize="20dp" />
+
     <!--    <TextView-->
     <!--        android:layout_width="100dp"-->
     <!--        android:layout_height="20dp"-->

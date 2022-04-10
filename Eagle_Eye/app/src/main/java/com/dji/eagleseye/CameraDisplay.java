@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.os.Bundle;
@@ -55,6 +56,8 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 
     private static final String TAG = MainActivity.class.getName();
 
+    private objectDetectorClass detectorClass;
+
     protected VideoFeeder.VideoDataListener mReceivedVideoDataListener = null;
     protected TextureView mVideoSurface = null;
     private Handler handler;
@@ -70,17 +73,26 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 
         handler = new Handler();
 
+        try{
+//            detectorClass = new objectDetectorClass(getAssets(),"ssd_mobilenet.tflite", "labelmap.txt", 300);
+            detectorClass = new objectDetectorClass(getAssets(),"detect.tflite","obj.names",300);
+            showToast("Object Detection model is loaded");
+        }
+        catch (IOException e)
+        {
+            showToast("Object Detection model is not loaded");
+            e.printStackTrace();
+        }
+
         initUI();
 
-        mReceivedVideoDataListener = new VideoFeeder.VideoDataListener() {
+        mReceivedVideoDataListener = (videoBuffer, size) -> {
+            if (mCodecManager != null) {
+                mCodecManager.sendDataToDecoder(videoBuffer, size);
 
-            @Override
-            public void onReceive(byte[] videoBuffer, int size) {
-                if (mCodecManager != null) {
-                    mCodecManager.sendDataToDecoder(videoBuffer, size);
-                }
             }
         };
+
     }
 
     private void initUI() {
@@ -89,6 +101,7 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 
         if (null != mVideoSurface) {
             mVideoSurface.setSurfaceTextureListener(this);
+
         }
 
         //recordingTime.setVisibility(View.INVISIBLE);
@@ -166,6 +179,7 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
                 VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(mReceivedVideoDataListener);
             }
         }
+
     }
 
     private void uninitPreviewer() {
@@ -187,8 +201,18 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         Log.e(TAG, "onSurfaceTextureAvailable");
-        if (mCodecManager == null) {
+        Camera camera = CameraApplication.getCameraInstance();
+        if (mCodecManager == null && surface != null && camera != null) {
             mCodecManager = new DJICodecManager(this, surface, width, height);
+//            enablePoseDetect();
+//            final Bitmap image = mVideoSurface.getBitmap();
+//            TextView textView = (TextView) findViewById(R.id.detection);
+//            textView.setText("Analysis");
+//            try {
+//                detectorClass.recognizeImage(image, textView);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 
@@ -210,6 +234,15 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        final Bitmap image = mVideoSurface.getBitmap();
+        TextView textView = (TextView) findViewById(R.id.detection);
+        TextView scoretext = (TextView) findViewById(R.id.score);
+        textView.setText("Analysis");
+        try {
+            detectorClass.recognizeImage(image, textView, scoretext);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 //    protected fun updateTextureViewSize(width: Int, height: Int) {
@@ -224,7 +257,10 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 //        }
 //    }
 
-    private final void analysis(byte[] bytes, int width, int height) throws IOException {
+    private long analysisInterval = 20L;
+    private long curTime = 0L;
+
+    private void analysis(byte[] bytes, int width, int height) throws IOException {
 
         YuvImage yuvImage = new YuvImage(bytes, 17, width, height, (int[])null);
         ByteArrayOutputStream op = new ByteArrayOutputStream();
@@ -233,14 +269,30 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 //        MlImage image = (new BitmapMlImageBuilder(bitmap)).build();
         op.close();
 
-
+//        TextView textView = (TextView) findViewById(R.id.detection);
+//        textView.setText("Analysis");
+//        if (analysisInterval < System.currentTimeMillis() - curTime) {
+//            curTime = System.currentTimeMillis();
+//            try {
+//                detectorClass.recognizeImage(bitmap, textView);
+//            }
+//            catch (IOException e){
+//                String exp = e.toString();
+//                showToast(exp);
+//                e.printStackTrace();
+//            }
+//        }
 
 
     }
 
-    private final void enablePoseDetect() {
+    private void enablePoseDetect() {
         if (mCodecManager != null) {
             mCodecManager.cleanSurface();
+            showToast("mCodecmanager is not null");
+        }
+        else {
+            showToast("mCodecmanager is null");
         }
 
         if (mCodecManager != null) {
@@ -254,31 +306,44 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
                     final byte[] bytes = new byte[dataSize];
                     yuvFrame.get(bytes);
                     AsyncTask.execute((Runnable)(new Runnable() {
-                        public final void run() {
-                            switch(format.getInteger("color-format")) {
-                                case 19:
-                                    try {
-                                        newSaveYuvDataToJPEG420P(bytes, width, height);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                case 20:
-                                default:
-                                    break;
-                                case 21:
+                        @Override
+                        public void run() {
+                            // two samples here, it may has other color format.
+                            int colorFormat = format.getInteger(MediaFormat.KEY_COLOR_FORMAT);
+                            switch (colorFormat) {
+                                case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar:
+                                    //NV12
                                     if (Build.VERSION.SDK_INT <= 23) {
                                         try {
+
                                             oldSaveYuvDataToJPEG(bytes, width, height);
-                                        } catch (IOException e) {
+                                        }
+                                        catch (IOException e)
+                                        {
                                             e.printStackTrace();
                                         }
                                     } else {
                                         try {
                                             newSaveYuvDataToJPEG(bytes, width, height);
-                                        } catch (IOException e) {
+                                        }
+                                        catch (IOException e)
+                                        {
                                             e.printStackTrace();
                                         }
                                     }
+                                    break;
+                                case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar:
+                                    //YUV420P
+                                    try {
+                                        newSaveYuvDataToJPEG420P(bytes, width, height);
+                                    }
+                                    catch (IOException e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                    break;
+                                default:
+                                    break;
                             }
 
                         }
@@ -289,7 +354,7 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 
     }
 
-    private final void oldSaveYuvDataToJPEG(byte[] yuvFrame, int width, int height) throws IOException {
+    private void oldSaveYuvDataToJPEG(byte[] yuvFrame, int width, int height) throws IOException {
         if (yuvFrame.length < width * height) {
             //DJILog.d(TAG, "yuvFrame size is too small " + yuvFrame.length);
             return;
@@ -336,12 +401,12 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
 
     }
 
-    private final void handle(byte[] bytes, int width, int height) throws IOException {
+    private void handle(byte[] bytes, int width, int height) throws IOException {
         analysis(bytes, width, height);
 
     }
 
-    private final void newSaveYuvDataToJPEG(byte[] yuvFrame, int width, int height) throws IOException {
+    private void newSaveYuvDataToJPEG(byte[] yuvFrame, int width, int height) throws IOException {
         if (yuvFrame.length >= width * height) {
             int length = width * height;
             byte[] u = new byte[width * height / 4];
@@ -361,7 +426,7 @@ public class CameraDisplay extends Activity implements SurfaceTextureListener {
         }
     }
 
-    private final void newSaveYuvDataToJPEG420P(byte[] yuvFrame, int width, int height) throws IOException {
+    private void newSaveYuvDataToJPEG420P(byte[] yuvFrame, int width, int height) throws IOException {
         if (yuvFrame.length >= width * height) {
             int length = width * height;
             byte[] u = new byte[width * height / 4];
