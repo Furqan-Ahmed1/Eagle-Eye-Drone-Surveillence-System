@@ -26,11 +26,17 @@ public class CameraApplication extends Application {
 
     private static BaseProduct mProduct;
     public Handler mHandler;
+    private static Context mContext;
 
     private Application instance;
     public void setContext(Application application) {
         instance = application;
     }
+
+    public void setContext(Context mContext) {
+        this.mContext = mContext;
+    }
+
 
     @Override
     public Context getApplicationContext() {
@@ -39,6 +45,11 @@ public class CameraApplication extends Application {
 
     public CameraApplication() {
 
+    }
+
+
+    public static Context getContext() {
+        return mContext;
     }
 
     public static synchronized BaseProduct getProductInstance() {

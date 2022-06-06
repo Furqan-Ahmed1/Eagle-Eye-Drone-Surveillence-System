@@ -30,6 +30,36 @@
         android:textColor="@color/green"
         android:textSize="20dp" />
 
+    <EditText
+        android:id="@+id/streamURL"
+        android:layout_width="224dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="7dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Enter stream link" />
+
+    <Button
+        android:id="@+id/streamBtnON"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/streamURL"
+        android:text="Start"
+        android:textSize="@dimen/dp_10_in_sw320dp"
+        android:visibility="visible" />
+
+    <Button
+        android:id="@+id/streamBtnOFF"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/streamURL"
+        android:text="STOP"
+        android:textSize="@dimen/dp_10_in_sw320dp"
+        android:visibility="invisible" />
+
     <!--    <TextView-->
     <!--        android:layout_width="100dp"-->
     <!--        android:layout_height="20dp"-->

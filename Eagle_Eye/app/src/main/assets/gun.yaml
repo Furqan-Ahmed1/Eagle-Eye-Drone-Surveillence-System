@@ -1,0 +1,4 @@
+names: ["pistol"]
+nc: 1
+#train: Guns_Detection-2/train/images
+#val: Guns_Detection-2/test/images

@@ -12,11 +12,13 @@
     <dji.ux.widget.FPVWidget
 
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_gravity="center"/>
 
     <dji.ux.widget.FPVOverlayWidget
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_gravity="center"/>
 
     <dji.ux.workflow.CompassCalibratingWorkFlow
         android:layout_width="match_parent"
@@ -62,6 +64,8 @@
             android:layout_width="96dp"
             android:layout_height="22dp"
             custom:excludeView="singleVoltage"/>
+
+
 
         <dji.ux.widget.ConnectionWidget
             android:layout_marginTop="3dp"
